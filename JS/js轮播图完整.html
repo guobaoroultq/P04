@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="./css/index.css">
+</head>
+<body>
+    <!-- 原生JS 轮播 构建 原理 实现
+    重点罗列 技术要点
+    1. 轮播图要素
+        1.1 无限滑动、无限滚动 （有这么一个显示效果特征）
+        1.2 翻页功能
+        1.3 页码跳转
+    2. 轮播图主要技术点
+        2.1 定时器
+        2.2 原生JS的DOM操作
+        2.3 CSS 动画
+    3. 轮播图主要实现流程
+        3.1 构建轮播图的内容结构 （N+1 解决 最后一张和第一张的衔接）
+        3.2 使用定位实现轮播图的排列
+        3.3 使用定时器滑动 默认左方向 
+        3.4 使用页码进行记录 （目的是 标记当前是第几页）
+        3.5 对第一页和最后一页进行特殊处理
+    4. 轮播图优化总结
+        4.1 按需加载
+        4.2 缩略图显示
+        4.3 动画没有结束，不能点
+    -->
+
+    <div id="scroll">
+        <img src="./image/1.jpg" alt="">
+        <img src="./image/2.jpg" alt="">
+        <img src="./image/3.jpg" alt="">
+        <img src="./image/4.jpg" alt="">
+        <img src="./image/1.jpg" alt="">
+    </div>
+</body>
+
+</html>
+<script>
+    var scroll_el = document.querySelector('#scroll')
+    var s_width = scroll_el.clientWidth
+
+    var imgs = document.querySelectorAll('#scroll > img')
+    for (var i = 0; i < imgs.length; i++) {
+        imgs[i].style.left = i * s_width + 'px'
+    }
+
+    var left_btn = document.createElement('div')
+    left_btn.innerText = '<'
+    left_btn.className = 'arrow left'
+    scroll_el.appendChild(left_btn)
+    var right_btn = document.createElement('div')
+    right_btn.innerText = '>'
+    right_btn.className = 'arrow right'
+    right_btn.style.right = '0'
+    scroll_el.appendChild(right_btn)
+
+    left_btn.onclick = function() {
+        moveleft()
+    }
+
+    right_btn.onclick = function() {
+        moveright()
+    }
+
+    function moveleft() {
+        page++ 
+        if (page == imgs.length - 1) {
+            page = imgs.length - 1
+        }
+        move()
+    }
+
+    function moveright() {
+        page-- 
+        if (page < 1) {
+            page = 0
+        }
+        move()
+    }
+    var page = 0
+    function move() {
+        for(var i = 0; i < imgs.length; i++) {
+            imgs[i].style.left = (i-page) * s_width + 'px'
+        }
+        pages.setPage(page)
+        setTimeout(function() {
+            if(page == imgs.length - 1) {
+                page = 0
+                for(var j = 0; j < imgs.length; j++) {
+                    imgs[j].style.transition = 'none'
+                }
+                for(var j = 0; j < imgs.length; j++) {
+                    imgs[j].style.left = j * s_width +'px'
+                }
+
+                setTimeout(function() {
+                    for(var k = 0; k < imgs.length; k++) {
+                        imgs[k].style.transition = 'left 0.7s ease-in-out'
+                    }
+                },100)
+            }
+        },700)
+    } 
+
+    var timer = setInterval(moveleft,3000)
+    // ********************************************************************
+    // 实现页码
+    // 显示
+    for(var i = 0; i < imgs.length - 1; i++) {
+        var p = document.createElement('div')
+        scroll_el.appendChild(p)
+        p.className = 'pageControl'
+        p.style.top = '80%'
+        p.style.left = (s_width/2) - ((imgs.length-1)*10 + (imgs.length-1-1)*10)/2 + i*20 + 'px'
+        p.index = i
+        p.onclick = function(event){
+            // 改变page
+            page = event.target.index
+            // move
+            move()
+
+            clearInterval(timer)
+            timer = setInterval(moveleft,3000)
+        }
+    }
+
+    var pages = document.querySelectorAll('.pageControl')
+
+    pages.setPage = function (page_index) {
+        if (page_index == imgs.length - 1) {
+            page_index = 0
+        }
+        for (var i = 0; i < this.length; i++) {
+            this[i].style.backgroundColor = ''
+        }
+
+        this[page_index].style.backgroundColor = '#fff'
+        
+    }
+    pages.setPage(0)
+
+
+</script>
